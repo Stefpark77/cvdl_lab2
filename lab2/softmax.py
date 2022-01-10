@@ -75,11 +75,10 @@ class SoftmaxClassifier:
         return history
 
     def get_weights(self, img_shape):
-        W = np.array(self.W, copy=True)
         # TODO your code here
         # 0. ignore the bias term
         # 1. reshape the weights to (*image_shape, num_classes)
-        return W[:, :-1].reshape(len(W), img_shape, self.num_classes)
+        return self.W[:-1, :].reshape(np.append([self.num_classes], img_shape))
 
     def load(self, path: str) -> bool:
         # TODO your code here
