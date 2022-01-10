@@ -27,10 +27,11 @@ class SoftmaxClassifier:
         return scores
 
     def predict(self, X: np.ndarray) -> int:
-        label = np.argmax(np.dot(X, self.W))[0]
-        # TODO your code here
-        # 0. com pute the dot product between the weight matrix and the input X as the scores
-        # 1. compute the prediction by taking the argmax of the class scores
+        # # TODO your code here
+        # # 0. com pute the dot product between the weight matrix and the input X as the scores
+        # # 1. compute the prediction by taking the argmax of the class scores
+        probs = self.predict_proba(X)
+        label = np.argmax(probs, axis=1)
         return label
 
     def fit(self, X_train: np.ndarray, y_train: np.ndarray,
