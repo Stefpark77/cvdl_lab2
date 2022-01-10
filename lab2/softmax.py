@@ -48,46 +48,29 @@ class SoftmaxClassifier:
             # TODO your code here
             # sample a batch of images from the training set
             # you might find np.random.choice useful
-            indices = None
-            X_batch, y_batch = None, None
-            dW = None
-            loss = None
-            running_loss = 0.0
-            batches = np.arange(0, len(X_train), bs)
+            indices = np.random.choice(np.arange(np.shape(X_train)[0]), size=bs, replace=False)
+            X_batch, y_batch = X_train[indices], y_train[indices]
 
-            for start in batches:
-                end = start + bs
-                if start + bs > len(X_train):
-                    end = len(X_train)
-                indices = list(range(start, end))
-                current_bs = end - start
+            soft = self.predict_proba(X_batch)
 
-                # indices = np.random.choice(range(len(X_train)), bs)
-                X_batch, y_batch = X_train[indices], y_train[indices]
-                output = X_batch.dot(self.W)
+            loss = np.sum(-np.log(soft[np.arange(bs), y_batch]))
+            loss = loss / bs + reg_strength * np.sum(self.W * self.W)
 
-                stabilized_output = output - np.max(output, axis=1, keepdims=True)
-                loss = -stabilized_output[range(0, current_bs), y_batch].reshape(current_bs, 1) \
-                       + np.log(np.sum(np.exp(stabilized_output), axis=1, keepdims=True))
 
-                loss = np.mean(loss) + (reg_strength / (2 * current_bs)) * np.sum(np.power(self.W, 2))
-                running_loss += loss
+            y_one_hot = np.zeros((y_batch.size, self.num_classes))
+            y_one_hot[np.arange(bs), y_batch] = 1
 
-                CT = softmax(output)
-                CT[range(current_bs), y_batch] -= 1
-                dW = X_batch.T.dot(CT) + reg_strength / current_bs * self.W
+            CT = soft - y_one_hot
 
-                # end TODO your code here
-                # compute the loss and dW
-                # perform a parameter update
-
-                self.W -= lr * dW
-                # append the training loss, accuracy on the training set and accuracy on the test set to the history dict
-                history.append(loss)
-            if iteration % 20 == 0 and iteration != 0:
-                lr /= 10
-            history.append(running_loss / len(batches))
-
+            dW = X_batch.T.dot(CT)
+            dW = dW / bs + reg_strength * self.W
+            # print(loss)
+            # end TODO your code here
+            # compute the loss and dW
+            # perform a parameter update
+            self.W -= lr * dW
+            # append the training loss, accuracy on the training set and accuracy on the test set to the history dict
+            history.append(loss)
         return history
 
     def get_weights(self, img_shape):

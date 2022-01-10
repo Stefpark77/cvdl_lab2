@@ -23,9 +23,10 @@ def confusion_matrix(y_true: np.ndarray, y_pred: np.ndarray, num_classes = None)
     # 2. use argmax to get the maximal prediction for each sample
     # hint: you might find np.add.at useful: https://numpy.org/doc/stable/reference/generated/numpy.ufunc.at.html
     if num_classes is None:
-        num_classes = len(np.unique(np.concatenate([y_true, y_pred])))
+        num_classes = max(np.max(y_true), np.max(y_pred)) + 1
     conf_mat = np.zeros((num_classes, num_classes))
-    np.add.at(conf_mat, (y_true, y_pred), 1)
+    indices = np.stack([y_true, y_pred])
+    np.add.at(conf_mat, indices.tolist(), 1)
     # end TODO your code here
     return conf_mat
 
@@ -42,20 +43,11 @@ def precision_score(y_true: np.ndarray, y_pred: np.ndarray, num_classes=None) ->
     num_classes represents the number of classes for the classification problem. If this is not provided,
     it will be computed from both y_true and y_pred
     """
-    precision = 0
     # TODO your code here
-    if num_classes is None:
-        num_classes = len(np.unique(np.concatenate([y_true, y_pred])))
-    conf = confusion_matrix(y_true, y_pred)
-    if num_classes == 2:
-        precision = conf[0, 0] / (conf[0, 0] + conf[1, 0])
-    else:
-        precision = np.zeros(num_classes)
-        tp = np.diag(conf)
-        tpfp = np.sum(conf, axis=0)
-        np.divide(tp, tpfp, out=precision, where=tpfp != 0)
+    conf_mat = confusion_matrix(y_true, y_pred, num_classes)
+    precision = conf_mat.diagonal() / (conf_mat.diagonal() + np.sum(conf_mat, axis=0))
     # end TODO your code here
-    return precision
+    return np.average(precision)
 
 
 def recall_score(y_true: np.ndarray, y_pred: np.ndarray, num_classes=None)  -> float:
@@ -72,18 +64,10 @@ def recall_score(y_true: np.ndarray, y_pred: np.ndarray, num_classes=None)  -> f
     """
     recall = None
     # TODO your code here
-    if num_classes is None:
-        num_classes = len(np.unique(np.concatenate([y_true, y_pred])))
-    conf = confusion_matrix(y_true, y_pred)
-    if num_classes == 2:
-        recall = conf[0, 0] / (conf[0, 0] + conf[0, 1])
-    else:
-        recall = np.zeros(num_classes)
-        tp = np.diag(conf)
-        tpfn = np.sum(conf, axis=1)
-        np.divide(tp, tpfn, out=recall, where=tpfn != 0)
+    conf_mat = confusion_matrix(y_true, y_pred, num_classes)
+    recall = conf_mat.diagonal() / (conf_mat.diagonal() + np.sum(conf_mat, axis=1))
     # end TODO your code here
-    return recall
+    return np.average(recall)
 
 
 def accuracy_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
@@ -91,7 +75,9 @@ def accuracy_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     # TODO your code here
     # remember, use vectorization, so no for loops
     # hint: you might find np.trace useful here https://numpy.org/doc/stable/reference/generated/numpy.trace.html
-    acc_score = np.trace(confusion_matrix(y_true, y_pred)) / len(y_true)
+    #acc_score = np.trace(confusion_matrix(y_true, y_pred)) / len(y_true)
+    conf_mat = confusion_matrix(y_true, y_pred)
+    acc_score = np.trace(conf_mat) / np.sum(conf_mat)
     # end TODO your code here
     return acc_score
 
@@ -108,7 +94,6 @@ def f1_score(y_true: np.ndarray, y_pred: np.ndarray, num_classes=None) -> float:
     return 2 * f1
 
 if __name__ == '__main__':
-    pass
     # TODO your tests here
     # add some test for your code.
     # you could use the sklean.metrics module (with macro averaging to check your results)
